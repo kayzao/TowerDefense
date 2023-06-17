@@ -4,6 +4,7 @@ class BaseTower {
   float fireRate;
   color towerColor;
 
+  PImage image;
   PVector pos;
   Enemy target;
 
