@@ -3,11 +3,18 @@ class ShopButton extends Button{
   BaseTower tower;
   
   ShopButton(BaseTower tower, int x, int y, int cost, int w, int h){
-    super(x, y, w, h, 4, 1, color(255, 255, 255, 100), color(0, 0, 0, 0));
+    super(x, y, w, h, 6, 2, color(255, 255, 255, 100), color(120, 120, 102));
     this.tower = tower;
     this.cost = cost;
-    image = tower.image.copy();
-    image.resize(w, h);
+    
+    //image = tower.image.copy();
+    //image.resize(w, h);
+  }
+  
+  @Override
+  void display(){
+    super.display();
+    tower.display();
   }
   
 }

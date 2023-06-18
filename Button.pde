@@ -21,12 +21,17 @@ class Button {
     stroke(borderColor);
     fill(fillColor);
     rect(pos.x, pos.y, w, h, c);
-    image(image, pos.x, pos.y);
+    //circle(pos.x, pos.y, w);
+    //image(image, pos.x, pos.y);
     if(pressed){
       fill(200, 200, 200, 50);
       noStroke();
       rect(pos.x, pos.y, w, h, c);
     }
+  }
+  
+  void run(){
+    pressed = isPressed() && mousePressed;
   }
   
   boolean isPressed(){

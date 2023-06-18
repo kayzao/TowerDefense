@@ -1,5 +1,5 @@
 class BaseTower {
-  boolean beingPlaced, selected, inMenu;
+  boolean selected;
   int dmg, pierce, projWidth, tSize, range, cost, dmgCount;
   float fireRate;
   color towerColor;
@@ -22,8 +22,8 @@ class BaseTower {
   void run() {
     target = getTarget();
   }
-  
-   void display() {
+
+  void display() {
     //text("target: " + target, 200, 200);
     //text("delayTimer: " + delayTimer, 200, 230);
     //text("projectiles: " + projectiles.size(), 200, 260);
@@ -32,14 +32,18 @@ class BaseTower {
     //  projectiles.get(i).display();
     //}
     if (selected) {
-      fill(RADIUS_COLOR);
-      noStroke();
-      circle(pos.x, pos.y, RANGE * 2);
+      displayRadius();
     }
     fill(towerColor);
     strokeWeight(1);
     stroke(0);
     circle(pos.x, pos.y, tSize * 2);
+  }
+
+  void displayRadius() {
+    fill(RADIUS_COLOR);
+    noStroke();
+    circle(pos.x, pos.y, RANGE * 2);
   }
 
   Enemy getTarget() {
@@ -51,23 +55,25 @@ class BaseTower {
         counter++;
       }
     }
-    
+
     if (counter == 0) return null;
     if (counter == 1) return inRange[0];
-    
+
     //else return target with largest prog value
     float maxProg = 0;
     int maxProgIndex = 0;
-    for(int i = 0; i < counter; i++){
-      if(inRange[i].prog > maxProg){
+    for (int i = 0; i < counter; i++) {
+      if (inRange[i].prog > maxProg) {
         maxProg = inRange[i].prog;
         maxProgIndex = i;
       }
     }
     return inRange[maxProgIndex];
   }
-  
-  BaseTower copy(){
-    return new BaseTower(dmg, pierce, projWidth, range, cost);
+
+  BaseTower copy() {
+    BaseTower toReturn = new BaseTower(dmg, pierce, projWidth, range, cost);
+    toReturn.pos = new PVector(pos.x, pos.y);
+    return toReturn;
   }
 }
