@@ -45,8 +45,8 @@ class Enemy {
     pos.x = (mprog / path.lengths[pathCounter]) * (path.points[pathCounter+1][0] - path.points[pathCounter][0]) + path.points[pathCounter][0];
     pos.y = (mprog / path.lengths[pathCounter]) * (path.points[pathCounter+1][1] - path.points[pathCounter][1]) + path.points[pathCounter][1];
   }
-  
-  Enemy copy(){
+
+  Enemy copy() {
     return new Enemy(health);
   }
 }

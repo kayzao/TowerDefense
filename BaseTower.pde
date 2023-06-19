@@ -1,6 +1,6 @@
 class BaseTower {
   boolean selected;
-  int dmg, pierce, projWidth, tSize, range, cost, dmgCount;
+  int dmg, pierce, projWidth, tSize, footprint, range, cost, dmgCount;
   float fireRate;
   color towerColor;
 
@@ -15,6 +15,7 @@ class BaseTower {
     this.range = range;
     this.cost = cost;
     tSize = TOWER_SIZE;
+    footprint = TOWER_FOOTPRINT;
     pos = new PVector(0, 0);
     towerColor = BASE_TOWER_COLOR;
   }
