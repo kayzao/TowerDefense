@@ -1,7 +1,7 @@
 //CONSTANTS
-final int TOWER_SIZE = 25, TOWER_FOOTPRINT = 15, RANGE = 200, SHOP_BUTTON_SIZE = 90, PATH_WIDTH = 50, MENU_WIDTH = 200, ENEMY_SIZE = 50, ENEMY_MAX_HEALTH = 10;
+final int TOWER_SIZE = 25, TOWER_FOOTPRINT = 15, RANGE = 200, SHOP_BUTTON_SIZE = 90, PATH_WIDTH = 50, MENU_WIDTH = 200, ENEMY_SIZE = 50, ENEMY_HITBOX = 30, ENEMY_MAX_HEALTH = 10, INVALID_DELAY = 500;
 final float ENEMY_BASE_SPEED = 1.5;
-final color RADIUS_COLOR = color(100, 100, 100, 80), PATH_COLOR = color(192, 196, 179), MENU_COLOR = #c98200, BASE_TOWER_COLOR = color(150, 255, 255);
+final color RADIUS_COLOR = color(100, 100, 100, 50), PATH_COLOR = color(192, 196, 179), MENU_COLOR = #c98200, BASE_TOWER_COLOR = color(150, 255, 255);
 
 boolean placingTower, towerSelected;
 int lives, towerSelectedIndex, money;
@@ -30,6 +30,7 @@ void setup() {
   lives = 250;
   placingTower = false;
   towerSelected = false;
+  towerSelectedIndex = -1;
   path = new Path();
 
   background = loadImage("MonkeyMeadow.png");
@@ -67,16 +68,15 @@ void draw() {
 
   runTowersEnemies();
 
+
+
   if (placingTower) {
-
-    tempTower.displayRadius();
+    tempTower.run();
     tempTower.display();
-    tempTower.pos.x = min(mouseX, width - MENU_WIDTH);
-    tempTower.pos.y = mouseY;
-
-    checkPlacingTower();
+    tempTower.displayRadius();
   }
 
+  
   runShop();
 }
 
@@ -85,14 +85,60 @@ void keyReleased() {
 }
 
 void mouseClicked() {
+  checkMousePressed();
+}
+
+void checkMousePressed() {
+  //if (!mousePressed) return;
+  if (placingTower) {
+    checkPlacingTower();
+    return;
+  }
+  if (towerSelected && mouseX > width - MENU_WIDTH) {
+    towerSelected = false;
+    if (towerSelectedIndex != -1) {
+      purchasedTowers.get(towerSelectedIndex).selected = false;
+      towerSelectedIndex = -1;
+    }
+  } else if(mouseX <= width - MENU_WIDTH){
+    //check if mouse is selecting a tower
+    //if(purchasedTowers.size() > 0){
+    //  println(towerSelectedIndex + " " + towerSelected + " " + frameCount);
+    //}
+    for (int i = 0; i < purchasedTowers.size(); i++) {
+      if (dist(mouseX, mouseY, purchasedTowers.get(i).pos.x, purchasedTowers.get(i).pos.y) <= purchasedTowers.get(i).tSize) { //if mouse is clicking on a tower
+        //println(towerSelected + " " + i + " " + towerSelectedIndex);
+        if(towerSelected && i == towerSelectedIndex){ //if it clicks on already selected tower
+          towerSelectedIndex = -1;
+          towerSelected = false;
+          purchasedTowers.get(i).selected = false;
+          return;
+        } else {
+          if(towerSelected){
+            purchasedTowers.get(towerSelectedIndex).selected = false;
+          }
+          towerSelected = true;
+          towerSelectedIndex = i;
+          purchasedTowers.get(i).selected = true;
+          return;
+        }
+      }
+    }
+    //mouse doesnt selected tower
+    towerSelected = false;
+    if (towerSelectedIndex != -1) {
+      purchasedTowers.get(towerSelectedIndex).selected = false;
+      towerSelectedIndex = -1;
+    }
+  }
 }
 
 void checkPlacingTower() {
-  if (mousePressed && mouseX > width - MENU_WIDTH) {
+  if (mouseX > width - MENU_WIDTH) {
     //cancel buying of tower
     placingTower = false;
     tempTower = null;
-  } else if (mousePressed) {
+  } else {
     //check to make sure its not being blocked by other towers or path
     if (!CheckTowerInPath(tempTower)) {
       boolean insideTower = false;
@@ -107,6 +153,8 @@ void checkPlacingTower() {
         money -= tempTower.cost;
         purchasedTowers.add(tempTower.copy());
         placingTower = false;
+        towerSelected = true;
+        towerSelectedIndex = purchasedTowers.size() - 1;
       }
     }
   }
@@ -158,6 +206,7 @@ void runShop() {
       tempTower = shopButtons[i].tower.copy();
       tempTower.tSize = possibleTowers[i].tSize;
       tempTower.pos = new PVector(mouseX, mouseY);
+      tempTower.placing = true;
     }
   }
 }
@@ -188,5 +237,8 @@ void runTowersEnemies() {
   }
   for (int i = 0; i < purchasedTowers.size(); i++) {
     purchasedTowers.get(i).display();
+  }
+  for (int i = 0; i < purchasedTowers.size(); i++) {
+    purchasedTowers.get(i).displayRadius();
   }
 }

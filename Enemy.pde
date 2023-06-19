@@ -1,5 +1,5 @@
 class Enemy {
-  int dmg, size, health;
+  int dmg, size, health, hitBox;
   float prog, spd;
   PVector pos;
   boolean end;
@@ -10,6 +10,7 @@ class Enemy {
     spd = ENEMY_BASE_SPEED + dmg * 0.5;
     prog = 0;
     size = ENEMY_SIZE;
+    hitBox = ENEMY_HITBOX;
     end = false;
 
     pos = new PVector(0, 0);

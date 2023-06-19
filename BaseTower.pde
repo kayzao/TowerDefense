@@ -1,6 +1,6 @@
 class BaseTower {
-  boolean selected;
-  int dmg, pierce, projWidth, tSize, footprint, range, cost, dmgCount;
+  boolean selected, placing, invalidPlacement;
+  int dmg, pierce, projWidth, tSize, footprint, range, cost, dmgCount, invalidFrame;
   float fireRate;
   color towerColor;
 
@@ -21,7 +21,12 @@ class BaseTower {
   }
 
   void run() {
-    target = getTarget();
+    if (placing) {
+      pos.x = min(mouseX, width - MENU_WIDTH);
+      pos.y = mouseY;
+    } else {
+      target = getTarget();
+    }
   }
 
   void display() {
@@ -32,26 +37,31 @@ class BaseTower {
     //for (int i = 0; i < projectiles.size(); i++) {
     //  projectiles.get(i).display();
     //}
-    if (selected) {
-      displayRadius();
-    }
+
     fill(towerColor);
     strokeWeight(1);
     stroke(0);
     circle(pos.x, pos.y, tSize * 2);
   }
 
+  void displayRadius(boolean force) {
+    if (selected || placing || force) {
+      displayRadius();
+    }
+  }
   void displayRadius() {
-    fill(RADIUS_COLOR);
-    noStroke();
-    circle(pos.x, pos.y, RANGE * 2);
+    if(selected || placing){
+      fill(RADIUS_COLOR);
+      noStroke();
+      circle(pos.x, pos.y, RANGE * 2);
+    }
   }
 
   Enemy getTarget() {
     Enemy[] inRange = new Enemy[spawnedEnemies.size()];
     int counter = 0;
     for (int i = 0; i < spawnedEnemies.size(); i++) {
-      if (dist(spawnedEnemies.get(i).pos.x, spawnedEnemies.get(i).pos.y, pos.x, pos.y) < range) {
+      if (dist(spawnedEnemies.get(i).pos.x, spawnedEnemies.get(i).pos.y, pos.x, pos.y) < range + spawnedEnemies.get(i).hitBox) {
         inRange[counter] = spawnedEnemies.get(i);
         counter++;
       }
@@ -75,6 +85,7 @@ class BaseTower {
   BaseTower copy() {
     BaseTower toReturn = new BaseTower(dmg, pierce, projWidth, range, cost);
     toReturn.pos = new PVector(pos.x, pos.y);
+    toReturn.selected = placing;
     return toReturn;
   }
 }
