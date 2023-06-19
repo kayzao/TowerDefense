@@ -42,6 +42,7 @@ class Projectile {
         pierce -= 1;
         tempCounter += dmg;
         attackedEnemies.add(spawnedEnemies.get(i).toString());
+        money += dmg;
       }
       if (pierce <= 0) {
         dead = true;
