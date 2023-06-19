@@ -15,5 +15,12 @@ class ShopButton extends Button {
     void display() {
     super.display();
     tower.display();
+    if (money < cost) {
+      noStroke();
+      fill(color(0, 0, 0, 150));
+      rect(pos.x, pos.y, w, h, c);
+    }
+    fill(0);
+    text(tower.name, pos.x, pos.y + h / 2);
   }
 }

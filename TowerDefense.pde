@@ -1,7 +1,11 @@
 //CONSTANTS
-final int TOWER_SIZE = 25, TOWER_FOOTPRINT = 15, RANGE = 200, SHOP_BUTTON_SIZE = 90, PATH_WIDTH = 50, MENU_WIDTH = 200, ENEMY_SIZE = 50, ENEMY_HITBOX = 30, ENEMY_MAX_HEALTH = 10, INVALID_DELAY = 500;
+final int TOWER_SIZE = 25, TOWER_FOOTPRINT = 15, TOWER_RANGE = 200, INVALID_DELAY = 300,
+  PROJ_SIZE = 10, PROJ_RANGE = 850, PROJ_SPD = 35,
+  SHOP_BUTTON_SIZE = 90, PATH_WIDTH = 50, MENU_WIDTH = 200,
+  ENEMY_SIZE = 50, ENEMY_HITBOX = 30, ENEMY_MAX_HEALTH = 10,
+  FRAMERATE = 60;
 final float ENEMY_BASE_SPEED = 1.5;
-final color RADIUS_COLOR = color(100, 100, 100, 50), PATH_COLOR = color(192, 196, 179), MENU_COLOR = #c98200, BASE_TOWER_COLOR = color(150, 255, 255);
+final color RADIUS_COLOR = color(100, 100, 100, 50), INVALID_COLOR = color(255, 0, 0, 50), PLACING_COLOR = color(255, 255, 255, 50), PATH_COLOR = color(192, 196, 179), MENU_COLOR = #c98200, BASE_TOWER_COLOR = color(150, 255, 255);
 
 boolean placingTower, towerSelected;
 int lives, towerSelectedIndex, money;
@@ -16,6 +20,10 @@ final Enemy[] possibleEnemies = {
 };
 
 final BaseTower[] possibleTowers = {
+  new DartMonkey(),
+  new DartMonkey(),
+  new DartMonkey(),
+  new DartMonkey(),
   new DartMonkey()
 };
 
@@ -25,7 +33,7 @@ ArrayList<Enemy> spawnedEnemies = new ArrayList<Enemy>();
 ArrayList<BaseTower> purchasedTowers = new ArrayList<BaseTower>();
 
 void setup() {
-  //frameRate(1);
+  frameRate(FRAMERATE);
   size(1420, 780);
   lives = 250;
   placingTower = false;
@@ -37,13 +45,13 @@ void setup() {
   background.resize(width - MENU_WIDTH, height);
 
   for (int i = 0; i < shopButtons.length; i++) {
-    shopButtons[i] = new ShopButton(possibleTowers[i].copy(), width - MENU_WIDTH + 5 + (i % 2) * SHOP_BUTTON_SIZE, 5 + (i / 2) * SHOP_BUTTON_SIZE, possibleTowers[i].cost, SHOP_BUTTON_SIZE, SHOP_BUTTON_SIZE);
+    shopButtons[i] = new ShopButton(possibleTowers[i].copy(), width - MENU_WIDTH + 5 + (i % 2) * (SHOP_BUTTON_SIZE + 5), 5 + (i / 2) * (SHOP_BUTTON_SIZE + 5), possibleTowers[i].cost, SHOP_BUTTON_SIZE, SHOP_BUTTON_SIZE);
     shopButtons[i].tower.pos = new PVector(shopButtons[i].pos.x + SHOP_BUTTON_SIZE / 2, shopButtons[i].pos.y + SHOP_BUTTON_SIZE / 2);
     shopButtons[i].tower.tSize = SHOP_BUTTON_SIZE / 2 - 8;
   }
 
   //DEBUG
-  money = 10000;
+  money = 1000;
 }
 
 void draw() {
@@ -60,15 +68,13 @@ void draw() {
   text("MONEY: " + money, 210, 75);
   fill(255, 255, 0);
   text(int(frameRate), width - MENU_WIDTH - 50, 50);
-  if (purchasedTowers.size() > 0) {
-    for (int i = 0; i < purchasedTowers.size(); i++) {
-      text("TARGET: " + purchasedTowers.get(i).target, purchasedTowers.get(i).pos.x, purchasedTowers.get(i).pos.y + 50);
-    }
-  }
+  //if (purchasedTowers.size() > 0) {
+  //  for (int i = 0; i < purchasedTowers.size(); i++) {
+  //    text("TARGET: " + purchasedTowers.get(i).target, purchasedTowers.get(i).pos.x, purchasedTowers.get(i).pos.y + 50);
+  //  }
+  //}
 
   runTowersEnemies();
-
-
 
   if (placingTower) {
     tempTower.run();
@@ -76,7 +82,6 @@ void draw() {
     tempTower.displayRadius();
   }
 
-  
   runShop();
 }
 
@@ -100,7 +105,7 @@ void checkMousePressed() {
       purchasedTowers.get(towerSelectedIndex).selected = false;
       towerSelectedIndex = -1;
     }
-  } else if(mouseX <= width - MENU_WIDTH){
+  } else if (mouseX <= width - MENU_WIDTH) {
     //check if mouse is selecting a tower
     //if(purchasedTowers.size() > 0){
     //  println(towerSelectedIndex + " " + towerSelected + " " + frameCount);
@@ -108,13 +113,13 @@ void checkMousePressed() {
     for (int i = 0; i < purchasedTowers.size(); i++) {
       if (dist(mouseX, mouseY, purchasedTowers.get(i).pos.x, purchasedTowers.get(i).pos.y) <= purchasedTowers.get(i).tSize) { //if mouse is clicking on a tower
         //println(towerSelected + " " + i + " " + towerSelectedIndex);
-        if(towerSelected && i == towerSelectedIndex){ //if it clicks on already selected tower
+        if (towerSelected && i == towerSelectedIndex) { //if it clicks on already selected tower
           towerSelectedIndex = -1;
           towerSelected = false;
           purchasedTowers.get(i).selected = false;
           return;
         } else {
-          if(towerSelected){
+          if (towerSelected) {
             purchasedTowers.get(towerSelectedIndex).selected = false;
           }
           towerSelected = true;
@@ -141,21 +146,20 @@ void checkPlacingTower() {
   } else {
     //check to make sure its not being blocked by other towers or path
     if (!CheckTowerInPath(tempTower)) {
-      boolean insideTower = false;
       for (BaseTower t : purchasedTowers) {
-        if (dist(t.pos.x, t.pos.y, tempTower.pos.x, tempTower.pos.y) <= t.footprint + tempTower.footprint) {
-          insideTower = true;
-          break;
+        if (dist(t.pos.x, t.pos.y, tempTower.pos.x, tempTower.pos.y) <= t.footprint + tempTower.footprint) { //inside tower
+          tempTower.invalidTime = millis();
+          return;
         }
       }
-      if (!insideTower) {
-        //PURCHASE COMPLETE
-        money -= tempTower.cost;
-        purchasedTowers.add(tempTower.copy());
-        placingTower = false;
-        towerSelected = true;
-        towerSelectedIndex = purchasedTowers.size() - 1;
-      }
+      //PURCHASE COMPLETE
+      money -= tempTower.cost;
+      purchasedTowers.add(tempTower.copy());
+      placingTower = false;
+      towerSelected = true;
+      towerSelectedIndex = purchasedTowers.size() - 1;
+    } else {
+      tempTower.invalidTime = millis();
     }
   }
 }
@@ -163,7 +167,7 @@ void checkPlacingTower() {
 boolean CheckTowerInPath(BaseTower t) {
   BaseTower temp = t.copy();
   for (int i = 0; i < path.lengths.length; i++) {
-    float distance = PointSegmentDistance(new PVector(path.points[i][0], path.points[i][1]), new PVector(path.points[i+1][0], path.points[i+1][1]), temp.pos);
+    float distance = pointSegmentDistance(new PVector(path.points[i][0], path.points[i][1]), new PVector(path.points[i+1][0], path.points[i+1][1]), temp.pos);
     if (distance < temp.footprint + path.pathWidth / 2.) {
       return true;
     }
@@ -171,7 +175,7 @@ boolean CheckTowerInPath(BaseTower t) {
   return false;
 }
 
-float PointSegmentDistance(PVector s1, PVector s2, PVector p) {
+float pointSegmentDistance(PVector s1, PVector s2, PVector p) {
   //returns float value of the distance between line segment s1s2 and point p
   //theres a lot of math here that i barely understand so idk how to explain it in comment form
   //basically, we're centering the entire system to the origin, and getting the dot product of the line segment and the point.
@@ -200,9 +204,13 @@ void runShop() {
     shopButtons[i].display();
 
     //tower bought
-    if (pressed[i] && !shopButtons[i].pressed && money > shopButtons[i].cost) {
+    if (pressed[i] && !shopButtons[i].pressed && money >= shopButtons[i].cost) {
       placingTower = true;
-      towerSelected = false;
+      if (towerSelected) {
+        purchasedTowers.get(towerSelectedIndex).selected = false;
+        towerSelected = false;
+        towerSelectedIndex = -1;
+      }
       tempTower = shopButtons[i].tower.copy();
       tempTower.tSize = possibleTowers[i].tSize;
       tempTower.pos = new PVector(mouseX, mouseY);
@@ -220,7 +228,7 @@ void runTowersEnemies() {
   //calculate enemies
   for (int i = 0; i < spawnedEnemies.size(); i++) {
     spawnedEnemies.get(i).run();
-    if (spawnedEnemies.get(i).end) {
+    if (spawnedEnemies.get(i).reachedEnd) {
       lives -= spawnedEnemies.get(i).dmg;
       spawnedEnemies.remove(i);
       continue;

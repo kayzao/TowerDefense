@@ -2,7 +2,7 @@ class Enemy {
   int dmg, size, health, hitBox;
   float prog, spd;
   PVector pos;
-  boolean end;
+  boolean reachedEnd;
 
   Enemy(int health) {
     this.health = health;
@@ -11,7 +11,7 @@ class Enemy {
     prog = 0;
     size = ENEMY_SIZE;
     hitBox = ENEMY_HITBOX;
-    end = false;
+    reachedEnd = false;
 
     pos = new PVector(0, 0);
   }
@@ -38,7 +38,7 @@ class Enemy {
       mprog -= path.lengths[pathCounter];
       pathCounter++;
       if (pathCounter == path.lengths.length) {
-        end = true;
+        reachedEnd = true;
         return;
       }
     }
